@@ -1,0 +1,17 @@
+#!/usr/bin/python
+
+import sys
+
+if len(sys.argv) == 1:
+    print "Usage: \"grab {filename} {string}\""
+else:
+    filename = sys.argv[1]
+    text = sys.argv[2]
+    
+    with open (filename, 'rU') as f:
+        for i, line in enumerate(f, start=1):
+            if text.lower() in line.lower():
+                print ("{}: {}".format(i, line.strip()))
+
+
+

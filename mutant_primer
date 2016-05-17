@@ -1,0 +1,131 @@
+#!/usr/bin/python
+
+import sys
+from Bio.Seq import Seq
+from Bio.Alphabet import IUPAC
+
+def main():
+    if len(sys.argv) > 1:
+        with open(sys.argv[1], "rU") as infile:
+            for i in infile:
+                if ">" not in i:
+                    seq = i
+        x = str(sys.argv[2])
+    else:
+        print "Usage: \"mutant_primers (sequence.fasta) (Q133K)\""
+    my_seq = Seq(seq, IUPAC.unambiguous_dna)
+    prot = my_seq.translate()
+    mutant = mute(x)
+    my_res_position = locator(prot, mutant, my_seq)
+    codons = res_to_codon(mutant[1])
+    favored = ecoli_codons(codons)
+    decide = decider(my_seq, my_res_position, codons, favored)
+    mutated_seq = decide[0]
+    changes = decide[1]
+    selected_region = regionpicker(mutant, mutated_seq)
+    native = my_seq[int(mutant[2]*3-20):int(mutant[2]*3+23)]
+    cg = cg_percent(selected_region)
+    output = [native,''.join(selected_region), cg, len(selected_region), changes]
+    return "The WT DNA sequence is : {0}\nThe potential primer is: {1}\nThe CG % is: {2}\nThe primer length is: {3}\nThis mutation required alteration of {4} nucleotides".format(output[0],output[1],output[2],output[3],output[4])
+
+def regionpicker(mutant, seq):
+    location = mutant[2]*3
+    start = int(location)-20
+    end = int(location)+23
+    return seq[start:end]
+
+def cg_percent(region):
+    c = 0
+    a = 0
+    g = 0
+    t = 0
+    for i in region:
+        x = i.replace("U", "T")
+        if x == "A": a+=1
+        if x == "C": c+=1
+        if x == "G": g+=1
+        if x == "T": t+=1
+    z = c+t+g+a
+    return float(c+g)/z
+
+def decider(seq, res_pos, codon, favor):
+    count = 0
+    score = []
+    for r in range(len(codon)):
+        score.append(0)
+    x = res_pos[0]
+    for i in x:
+        for j in range(2):
+            if i == codon[j][count]:
+                score[j] += 1
+        count += 1
+    l = max(score)
+    m = [o for o,p in enumerate(score) if p ==l]
+    the_one = codon[m[0]]
+    if len(m)>1:
+        if favor in m: the_one = favor
+    if the_one == favor: print "The most used codon is equal to the mutation with the fewest changed nucleotides"
+    lst = list(seq)
+    lst[res_pos[1]:res_pos[1]+3] = the_one
+    final = 3 - score[m[0]]
+    return ''.join(lst), final
+
+def ecoli_codons(codons):
+    d = {'ACC': '0.44', 'ATG': '1.00', 'AAG': '0.23', 'AAA': '0.77', 'ATC': '0.42', 'AAC': '0.55', 'ATA': '0.07', 'AGG': '0.02', 'CCT': '0.16', 'CTC': '0.10', 'AGC': '0.28', 'ACA': '0.13', 'AGA': '0.04', 'CAT': '0.57', 'AAT': '0.45', 'ATT': '0.51', 'CTG': '0.50', 'CTA': '0.04', 'ACT': '0.17', 'CAC': '0.43', 'ACG': '0.27', 'CAA': '0.35', 'AGT': '0.15', 'CAG': '0.65', 'CCG': '0.52', 'CCC': '0.12', 'CTT': '0.10', 'TAT': '0.57', 'GGT': '0.34', 'TGT': '0.45', 'CGA': '0.06', 'CCA': '0.19', 'CGC': '0.40', 'GAT': '0.63', 'CGG': '0.10', 'TTT': '0.57', 'TGC': '0.55', 'GGG': '0.15', 'TAG': '0.07', 'GGA': '0.11', 'TGG': '1.00', 'GGC': '0.40', 'TAC': '0.43', 'GAG': '0.31', 'TCG': '0.15', 'TTA': '0.13', 'GAC': '0.37', 'CGT': '0.38', 'GAA': '0.69', 'TAA': '0.64', 'GCA': '0.21', 'GTA': '0.15', 'GCC': '0.27', 'GTC': '0.22', 'GCG': '0.36', 'GTG': '0.37', 'TTC': '0.43', 'GTT': '0.26', 'GCT': '0.16', 'TGA': '0.29', 'TTG': '0.13', 'TCC': '0.15', 'TCA': '0.12', 'TCT': '0.15'}
+    y = 1.00
+    x = []
+    for i in codons:
+        if float(d[i]) < float(y):
+            y = float(d[i])
+            x.append(i)
+    return x[-1]
+
+def locator(protein, pos, seq):
+    #This function simply confirms that the user defined residue actually exists. It also returns the native codons
+    position = int(pos[2])
+    if pos[0] != protein[position]:
+        sys.exit("Residue mismatch")
+    x = pos[2] * 3
+    return [seq[x:x+3], x]
+
+def res_to_codon(residue):
+    #Given a residue, this function will return all possible codons
+    map = [['T', 'ACC', 'ACA', 'ACG', 'ACT'], ['V', 'GTC', 'GTT', 'GTG', 'GTA'], ['N', 'AAC', 'AAT'], ['P', 'CCT', 'CCG', 'CCA', 'CCC'], ['W', 'TGG'], ['S', 'AGC', 'AGT', 'TCT', 'TCG', 'TCC', 'TCA'], ['I', 'ATC', 'ATA', 'ATT'], ['H', 'CAT', 'CAC'], ['K', 'AAA', 'AAG'], ['Q', 'CAA', 'CAG'], ['G', 'GGT', 'GGG', 'GGA', 'GGC'], ['A', 'GCG', 'GCA', 'GCC', 'GCT'], ['C', 'TGC', 'TGT'], ['STOP', 'TGA', 'TAA', 'TAG'], ['Y', 'TAT', 'TAC'], ['R', 'CGG', 'AGG', 'CGT', 'AGA', 'CGA', 'CGC'], ['E', 'GAA', 'GAG'], ['L', 'CTT', 'CTG', 'CTC', 'CTA', 'TTG', 'TTA'], ['M', 'ATG'], ['D', 'GAT', 'GAC'], ['F', 'TTT', 'TTC']]
+    codons = ""
+    for i in map:
+        if residue == i[0]:
+            codons = i[1:]
+    return codons
+
+def codon_to_res(residue):
+    map = {"TTT":"F", "TTC":"F", "TTA":"L", "TTG":"L",
+    "TCT":"S", "TCC":"S", "TCA":"S", "TCG":"S",
+    "TAT":"Y", "TAC":"Y", "TAA":"STOP", "TAG":"STOP",
+    "TGT":"C", "TGC":"C", "TGA":"STOP", "TGG":"W",
+    "CTT":"L", "CTC":"L", "CTA":"L", "CTG":"L",
+    "CCT":"P", "CCC":"P", "CCA":"P", "CCG":"P",
+    "CAT":"H", "CAC":"H", "CAA":"Q", "CAG":"Q",
+    "CGT":"R", "CGC":"R", "CGA":"R", "CGG":"R",
+    "ATT":"I", "ATC":"I", "ATA":"I", "ATG":"M",
+    "ACT":"T", "ACC":"T", "ACA":"T", "ACG":"T",
+    "AAT":"N", "AAC":"N", "AAA":"K", "AAG":"K",
+    "AGT":"S", "AGC":"S", "AGA":"R", "AGG":"R",
+    "GTT":"V", "GTC":"V", "GTA":"V", "GTG":"V",
+    "GCT":"A", "GCC":"A", "GCA":"A", "GCG":"A",
+    "GAT":"D", "GAC":"D", "GAA":"E", "GAG":"E",
+    "GGT":"G", "GGC":"G", "GGA":"G", "GGG":"G",}
+
+def mute(mutate):
+    #This function splits the second argument into [WT residue, Mutant residue, position] and returns as a list, subtracts one as first position is 0
+    nos = ""
+    for i in mutate:
+        if i.isdigit():
+            nos+=i
+    mutant = [mutate[:1], mutate[-1:], int(nos)-1]
+    return mutant
+
+
+
+if __name__ == '__main__':
+	print main()
+	

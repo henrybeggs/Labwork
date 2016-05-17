@@ -1,0 +1,24 @@
+#!/usr/bin/python
+
+import warnings
+from Bio.Seq import Seq
+from Bio import SeqIO, BiopythonWarning
+from Bio.Alphabet.IUPAC import ExtendedIUPACDNA
+import sys
+
+warnings.simplefilter('ignore', BiopythonWarning)
+
+if len(sys.argv) < 3: print "Usage: translater \"/path/to/file\" \"Known sequence in protein\""; sys.exit()
+
+with open(sys.argv[1], "r") as f:
+    for fasta in SeqIO.parse(f, format="fasta"):
+        sequence = Seq(str(fasta.seq), ExtendedIUPACDNA())
+        reverse = Seq(str(sequence.reverse_complement()), ExtendedIUPACDNA())
+        print ">" + fasta.id
+        check = sys.argv[2].upper().strip()
+        for x in range(0,3):
+            forward = sequence[x:].translate()
+            if check in forward: print forward
+            backward = reverse[x:].translate()
+            if check in backward: print backward
+
