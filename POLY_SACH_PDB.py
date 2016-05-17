@@ -2,6 +2,10 @@
 
 import sys, os, re
 
+"""
+In order for GROMACS to read a polysaccharide.pdb file, an `rtp` entry must first be added to the merged.rtp
+This first step renumbers the atoms of the polysaccharide and lists them as one residue, this allows for downstream usage in CHARMM_GUI and PSF_PARSE.py
+"""
 def args_parse(path):
     # This function ensures that the first argument is a valid filepath
     path = path.strip()

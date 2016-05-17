@@ -6,6 +6,12 @@ from Bio import SeqIO, BiopythonWarning
 from Bio.Alphabet.IUPAC import ExtendedIUPACDNA
 import sys
 
+"""
+Supply a .fasta formatted sequence and a short sequence in the translated sequence to print the translated sequence in the correct reading frame
+Results from GeneWiz can be translated quickly by cd into directory and | for i in ./*; do translater $i `4+ sequence`; done
+Results can easily be pasted into Clustal Omega to compare sequences
+"""
+
 warnings.simplefilter('ignore', BiopythonWarning)
 
 if len(sys.argv) < 3: print "Usage: translater \"/path/to/file\" \"Known sequence in protein\""; sys.exit()

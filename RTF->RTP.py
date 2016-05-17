@@ -1,5 +1,11 @@
 import sys, os
 
+"""
+For simulations involving a carbon monolayer we first generated an `rtf` file, which was similar, but not equivalent to an `rtp` entry
+This script makes that conversion
+"""
+
+
 def file_fixer(filein):
     fin = filein[1].strip()
     if not os.path.exists(fin):

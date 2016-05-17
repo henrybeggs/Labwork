@@ -1,6 +1,8 @@
 #!/usr/bin/python
 
-import sys
+import sys, os
+
+
 
 if len(sys.argv) == 1:
     print "Usage: \"grab {filename} {string}\""
@@ -12,6 +14,6 @@ else:
         for i, line in enumerate(f, start=1):
             if text.lower() in line.lower():
                 print ("{}: {}".format(i, line.strip()))
-
-
+            else:
+                print "{} not found in {}".format(text, os.path.basename(filename))
 

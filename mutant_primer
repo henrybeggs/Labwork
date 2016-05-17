@@ -4,6 +4,8 @@ import sys
 from Bio.Seq import Seq
 from Bio.Alphabet import IUPAC
 
+# Given a supplied WT sequence and an appropriately identified point mutant, will return the smallest nucleotide change available to make the translational mutation
+
 def main():
     if len(sys.argv) > 1:
         with open(sys.argv[1], "rU") as infile:
